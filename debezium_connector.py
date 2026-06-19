@@ -22,16 +22,24 @@ conn_conf={
         "database.dbname": "cdc_db",
         "topic.prefix": "ipl_cdc",
         "table.include.list": "public.matches,public.deliveries",
+        "topic.creation.default.partitions": "3",
+        "topic.creation.default.replication.factor": "1",
         "plugin.name": "pgoutput",
         "slot.name": "debezium_slot",
-        "publication.name": "debezium_publication"
-    }
+        "publication.name": "debezium_publication",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "false",
+        "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "key.converter.schemas.enable": "false",
+        "decimal.handling.mode": "string",
+        "tombstones.on.delete": "false",
+            }
 }
 
 
 def wait_for_connect(retries=10,delay=5):
     log.info("wait for kafka connect ready")
-    for attempts in range(1,retries):
+    for attempts in range(1,retries+1):
         try:
             r=requests.get(conn_url)
             if r.status_code==200:
@@ -40,8 +48,8 @@ def wait_for_connect(retries=10,delay=5):
         except requests.exceptions.ConnectionError:
             log.warning(f"Attempt {attempts}")
             time.sleep(delay)
-        log.error("Timeout — Kafka Connect ready nahi hua")
-        return False
+    log.error("Timeout — Kafka Connect ready nahi hua")
+    return False
     
 def connection_exists():
     r=requests.get(f"{conn_url}/ipl-postgres-connector")
